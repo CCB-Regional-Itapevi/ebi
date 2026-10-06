@@ -51,14 +51,14 @@ Arquivo de exemplo: `.env.example`
 
 ## Publicação no GitHub
 Repositório alvo:
-`git@github.com:secretariaregionalitapevi/ebi.git`
+`https://github.com/CCB-Regional-Itapevi/ebi.git`
 
 Comandos (quando o repositório local estiver no escopo correto):
 ```bash
 git add .
 git commit -m "feat: estrutura completa do app cadastro MI com seleção de comuns por modal"
 git branch -M main
-git remote add origin git@github.com:secretariaregionalitapevi/ebi.git
+git remote add origin https://github.com/CCB-Regional-Itapevi/ebi.git
 git push -u origin main
 ```
 
