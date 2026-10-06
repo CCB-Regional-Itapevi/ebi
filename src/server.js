@@ -469,7 +469,7 @@ async function handleRequest(req, res) {
       }
 
       const payload = await readJsonBody(req);
-      console.log("[DEBUG] Recebendo Payload no Servidor:", JSON.stringify(payload, null, 2));
+      // Do not log personal data from submitted records.
       const missing = ["data_reuniao", "localidade"].filter((field) => {
         const value = payload[field];
         return value === undefined || value === null || String(value).trim() === "";
@@ -490,8 +490,11 @@ async function handleRequest(req, res) {
         });
       }
 
-      // Salvar localmente
-      const saved = await saveSubmission("recitativo", payload);
+      // Metadata belongs to the persisted database record.
+      payload.id = crypto.randomUUID();
+      payload.data_reuniao = normalizeDate(payload.data_reuniao);
+      payload.created_at = new Date().toISOString();
+      payload.updated_at = payload.created_at;
 
       // Salvar no Supabase
       const supabaseUrl = process.env.SUPABASE_URL;
@@ -521,6 +524,10 @@ async function handleRequest(req, res) {
           return sendJson(res, 500, { error: "Falha de conexão com Supabase." });
         }
       }
+
+      const saved = { id: payload.id, createdAt: payload.created_at };
+      // Persist a local copy only after the database accepted the record.
+      if (ENABLE_LOCAL_PERSISTENCE) await saveSubmission("recitativo", payload);
 
       // Webhook opcional
       const webhookUrl = process.env.WEBHOOK_RECITATIVOS;
@@ -660,6 +667,7 @@ async function handleRequest(req, res) {
               ...supabaseHeaders(supabaseKey)
             }
           });
+          if (!response.ok) return sendJson(res, 502, { error: "Falha ao consultar o catalogo de comuns." });
           const data = await response.json();
           const comuns = Array.isArray(data)
             ? data.map(normalizeComum).filter(Boolean).sort((a, b) => a.comum.localeCompare(b.comum, "pt-BR"))

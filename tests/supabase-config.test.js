@@ -93,6 +93,13 @@ test('activity or visits submission targets the matrix tables on the new project
   assert.equal(writes[0].url.pathname, isEbi ? '/rest/v1/ebi_atividades' : '/rest/v1/visitas_lancamentos');
   assert.equal(writes[0].options.headers.apikey, env.SUPABASE_SECRET_KEY);
   assert.equal(writes[0].options.headers.Authorization, undefined);
+  if (isEbi) {
+    const stored = JSON.parse(writes[0].options.body);
+    assert.match(stored.id, /^[0-9a-f-]{36}$/);
+    assert.equal(result.body.id, stored.id);
+    assert.equal(stored.data_reuniao, payload.data_reuniao);
+    assert.ok(stored.created_at);
+  }
   assert.equal(calls.every(call => call.url.origin === env.SUPABASE_URL), true);
   const auth = calls.find(call => call.url.pathname === '/auth/v1/user');
   assert.equal(auth.options.headers.Authorization, 'Bearer test-user-jwt');
